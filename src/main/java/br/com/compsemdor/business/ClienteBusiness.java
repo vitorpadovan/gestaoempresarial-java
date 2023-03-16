@@ -1,7 +1,6 @@
 package br.com.compsemdor.business;
 
 import java.lang.reflect.Field;
-import java.sql.Date;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ public class ClienteBusiness {
 
 	private ClienteRepo repo;
 
+	static final String ERRO_VALIDACAO_DOCUMENTO = "Erro de validação de documento";
+
 
 	public ClienteBusiness(
 			ClienteRepo repo) {
@@ -31,32 +32,45 @@ public class ClienteBusiness {
 	}
 
 	public Cliente getCliente(int cod) {
-		var cliente = repo.findById(cod);
-		if (cliente.isPresent())
-			return cliente.get();
-		throw new AplicationException("Cliente não encontrado", "Cliente de código " + cod + " não encontrado");
 		// TODO adicionar um erro 404
+		return pesquisarCliente(cod);
+	}
+
+	private Cliente pesquisarCliente(int id) {
+		var dbCliente = repo.findById(id);
+		if (!dbCliente.isPresent())
+			throw new AplicationException("Cliente não encontrado", "Cliente de código " + id + " não encontrado");
+		return dbCliente.get();
 	}
 
 	public void deletar(int cod) {
+		pesquisarCliente(cod);
 		var cliente = repo.findById(cod);
 		if (cliente.isPresent())
 			log.info("Deletando o cliente " + cliente.get().toString());
-		else
-			throw new AplicationException("Cliente não encontrado", "Cliente de código " + cod + " não encontrado");
 		repo.deleteById(cod);
 	}
 
+	public Cliente atualizarCliente(int id, SalvarClienteRequest fields) {
+		pesquisarCliente(id);
+		var dbCliente = repo.findByCpfCnpj(fields.getCpfCnpj());
+		if (dbCliente.isPresent() && dbCliente.get().getCodCliente() != id)
+			throw new AplicationException("Documento duplicado", "Existe outro cliente cadastrado c/ este CPF/CNPJ");
+		log.info("Alterando cliente " + id);
+		var cliente = convertToCliente(fields);
+		var response = dbCliente.get();
+		response.update(cliente);
+		return repo.save(response);
+	}
+
 	public Cliente atualizarClientePorCampos(int id, Map<String, Object> campos) {
-		var existingProduct = repo.findById(id);
-		if (!existingProduct.isPresent())
-			throw new AplicationException("Erro ao atualizar cliente", "Cliente não encontrado para ser atualizado");
+		var cliente = pesquisarCliente(id);
 		campos.forEach((chave, valor) -> {
 			Field campo = ReflectionUtils.findField(Cliente.class, chave);
 			campo.setAccessible(true);
-			ReflectionUtils.setField(campo, existingProduct.get(), valor);
+			ReflectionUtils.setField(campo, cliente, valor);
 		});
-		return repo.save(existingProduct.get());
+		return repo.save(cliente);
 	}
 
 	public List<Cliente> getClientes() {
@@ -68,28 +82,24 @@ public class ClienteBusiness {
 		validaDocumentoValido(cliente);
 		validaDataNascimento(cliente);
 		validaDuplicidadeDocumento(cliente);
-		validaDocumentoAtivo(cliente);
 		return repo.save(this.convertToCliente(cliente));
-	}
-
-	private void validaDocumentoAtivo(SalvarClienteRequest cliente) {
 	}
 
 	private void validaDocumentoValido(SalvarClienteRequest cliente) {
 		if (!documentoValido(cliente))
-			throw new AplicationException("Erro de validação de documento",
+			throw new AplicationException(ERRO_VALIDACAO_DOCUMENTO,
 					"Documento " + cliente.getCpfCnpj() + " inválido ");
 	}
 
 	private void validaDataNascimento(SalvarClienteRequest cliente) {
 		if (!dataNascimentoValida(cliente))
-			throw new AplicationException("Erro de validação de documento", "Data de nascimento inválida");
+			throw new AplicationException(ERRO_VALIDACAO_DOCUMENTO, "Data de nascimento inválida");
 	}
 
 	private void validaDuplicidadeDocumento(SalvarClienteRequest cliente) {
 		var clienteTemp = repo.findByCpfCnpj(cliente.getCpfCnpj());
 		if (clienteTemp.isPresent())
-			throw new AplicationException("Erro de validação de documento",
+			throw new AplicationException(ERRO_VALIDACAO_DOCUMENTO,
 					"CPF/CNPJ já cadastrado com o nome '" + clienteTemp.get().getNomeCliente() + "'");
 	}
 
@@ -109,7 +119,7 @@ public class ClienteBusiness {
 			return false;
 		if (cliente.getTipoDeDocumento() == TipoDocumento.CNPJ && cliente.getDataNascimento() == null)
 			return true;
-		return cliente.getDataNascimento().before(Date.from(Instant.now()));
+		return cliente.getDataNascimento().before(java.util.Date.from(Instant.now()));
 	}
 
 	private boolean documentoValido(SalvarClienteRequest documento) {
@@ -206,12 +216,5 @@ public class ClienteBusiness {
 		} catch (Exception ex) {
 			return false;
 		}
-	}
-
-	public Cliente atualizarCliente(int id, SalvarClienteRequest fields) {
-		// TODO melhorar tratamento deste caso. Necessário fazer tratamento c/
-		// verificação se o cliente existe
-		var cliente = convertToCliente(fields);
-		return repo.save(cliente);
 	}
 }

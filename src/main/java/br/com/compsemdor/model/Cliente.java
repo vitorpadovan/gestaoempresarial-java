@@ -43,7 +43,19 @@ public class Cliente {
 	@Column(nullable = true)
 	private Integer numero;
 
+	@Builder.Default
 	private Boolean clienteAtivo = false;
 
 	private TipoDocumento tipoDeDocumento;
+
+
+	public void update(Cliente c) {
+		this.nomeCliente = c.nomeCliente;
+		this.cpfCnpj = c.cpfCnpj;
+		this.cep = c.cep;
+		this.dataNascimento = c.dataNascimento;
+		this.numero = c.numero;
+		this.clienteAtivo = c.clienteAtivo;
+		this.tipoDeDocumento = c.tipoDeDocumento;
+	}
 }
