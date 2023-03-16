@@ -21,17 +21,17 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ClienteBusiness {
 
-	private ClienteRepo _repo;
+	private ClienteRepo repo;
 
 
 	public ClienteBusiness(
-			ClienteRepo _repo) {
+			ClienteRepo repo) {
 		super();
-		this._repo = _repo;
+		this.repo = repo;
 	}
 
 	public Cliente getCliente(int cod) {
-		var cliente = _repo.findById(cod);
+		var cliente = repo.findById(cod);
 		if (cliente.isPresent())
 			return cliente.get();
 		throw new AplicationException("Cliente não encontrado", "Cliente de código " + cod + " não encontrado");
@@ -39,16 +39,16 @@ public class ClienteBusiness {
 	}
 
 	public void deletar(int cod) {
-		var cliente = _repo.findById(cod);
+		var cliente = repo.findById(cod);
 		if (cliente.isPresent())
 			log.info("Deletando o cliente " + cliente.get().toString());
 		else
 			throw new AplicationException("Cliente não encontrado", "Cliente de código " + cod + " não encontrado");
-		_repo.deleteById(cod);
+		repo.deleteById(cod);
 	}
 
 	public Cliente atualizarClientePorCampos(int id, Map<String, Object> campos) {
-		var existingProduct = _repo.findById(id);
+		var existingProduct = repo.findById(id);
 		if (!existingProduct.isPresent())
 			throw new AplicationException("Erro ao atualizar cliente", "Cliente não encontrado para ser atualizado");
 		campos.forEach((chave, valor) -> {
@@ -56,11 +56,11 @@ public class ClienteBusiness {
 			campo.setAccessible(true);
 			ReflectionUtils.setField(campo, existingProduct.get(), valor);
 		});
-		return _repo.save(existingProduct.get());
+		return repo.save(existingProduct.get());
 	}
 
 	public List<Cliente> getClientes() {
-		return _repo.findAll();
+		return repo.findAll();
 	}
 
 	public Cliente salvar(SalvarClienteRequest cliente) {
@@ -69,7 +69,7 @@ public class ClienteBusiness {
 		validaDataNascimento(cliente);
 		validaDuplicidadeDocumento(cliente);
 		validaDocumentoAtivo(cliente);
-		return _repo.save(this.convertToCliente(cliente));
+		return repo.save(this.convertToCliente(cliente));
 	}
 
 	private void validaDocumentoAtivo(SalvarClienteRequest cliente) {
@@ -87,7 +87,7 @@ public class ClienteBusiness {
 	}
 
 	private void validaDuplicidadeDocumento(SalvarClienteRequest cliente) {
-		var clienteTemp = _repo.findByCpfCnpj(cliente.getCpfCnpj());
+		var clienteTemp = repo.findByCpfCnpj(cliente.getCpfCnpj());
 		if (clienteTemp.isPresent())
 			throw new AplicationException("Erro de validação de documento",
 					"CPF/CNPJ já cadastrado com o nome '" + clienteTemp.get().getNomeCliente() + "'");
@@ -132,7 +132,7 @@ public class ClienteBusiness {
 		for (int i = 1; i < 11 && igual; i++)
 			if (valor.charAt(i) != valor.charAt(0))
 				igual = false;
-		if (igual || valor == "12345678909")
+		if (igual || valor.equals("12345678909"))
 			return false;
 		int[] numeros = new int[11];
 		try {
@@ -212,6 +212,6 @@ public class ClienteBusiness {
 		// TODO melhorar tratamento deste caso. Necessário fazer tratamento c/
 		// verificação se o cliente existe
 		var cliente = convertToCliente(fields);
-		return _repo.save(cliente);
+		return repo.save(cliente);
 	}
 }
