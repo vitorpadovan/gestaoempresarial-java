@@ -25,15 +25,17 @@ public class SalvarClienteRequest implements Convertable<Cliente> {
 
 	private Date dataNascimento;
 
+	@NotNull(message = "Cep deve ser obrigatório")
 	private String cep;
 
 	@Min(value = 1, message = "Numero do endereço inválido")
-	@NotNull
+	@NotNull(message = "Número deve ser obrigatório")
 	private Integer numero;
 
 	@Builder.Default
 	private boolean clienteAtivo = false;
 
+	@NotNull(message = "Obrigatório informar o tipo de documento")
 	private TipoDocumento tipoDeDocumento;
 
 
