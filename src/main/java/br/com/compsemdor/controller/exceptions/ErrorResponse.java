@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class ErrorResponse {
 
-	private SortedMap<String, String> mapa = new TreeMap<String, String>();
+	private SortedMap<String, String> mapa = new TreeMap<>();
 
 
 	public ErrorResponse(

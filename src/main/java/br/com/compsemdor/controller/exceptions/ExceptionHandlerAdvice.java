@@ -1,6 +1,7 @@
 package br.com.compsemdor.controller.exceptions;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,6 +21,11 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(AplicationException.class)
 	protected ResponseEntity<ErrorResponse> handleAplicationException(AplicationException ex) {
 		return ResponseEntity.badRequest().body(new ErrorResponse(ex));
+	}
+
+	@ExceptionHandler(NotFoundException.class)
+	protected ResponseEntity<ErrorResponse> handleANotFoundException(AplicationException ex) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex));
 	}
 
 	@Override

@@ -6,17 +6,17 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class AplicationException extends BaseException {
+public class NotFoundException extends BaseException {
 
 	private static final long serialVersionUID = 1L;
 
 
-	public AplicationException(
+	public NotFoundException(
 			ErrorApi e) {
 		super(e);
 	}
 
-	public AplicationException(
+	public NotFoundException(
 			String titulo,
 			String descricao) {
 		super(titulo, descricao);
