@@ -19,6 +19,7 @@ public class StringUtils {
 		string = string.replace(';', ' ');
 		string = string.replace(',', ' ');
 		string = string.trim();
+		string = string.replaceAll(" ", "");
 		return string;
 	}
 

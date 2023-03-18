@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 
+import br.com.compsemdor.business.utils.StringUtils;
 import br.com.compsemdor.business.utils.ValidacaoDocumento;
 import br.com.compsemdor.controller.exceptions.AplicationException;
 import br.com.compsemdor.controller.exceptions.NotFoundException;
@@ -30,6 +31,8 @@ public class ClienteBusiness extends BaseBusiness<Cliente, Integer, ClienteRepo>
 
 	@Override
 	protected void validacoesExtrasSalvar(Cliente item) {
+		item.setCep(StringUtils.removeSymbols(item.getCep()));
+		item.setCpfCnpj(StringUtils.removeSymbols(item.getCpfCnpj()));
 		validaDocumentoValido(item);
 		validaDataNascimento(item);
 		validaDuplicidadeDocumento(item);
@@ -37,6 +40,8 @@ public class ClienteBusiness extends BaseBusiness<Cliente, Integer, ClienteRepo>
 
 	@Override
 	protected void validacoesExtrasSalvar(Integer cod, Cliente item) {
+		item.setCep(StringUtils.removeSymbols(item.getCep()));
+		item.setCpfCnpj(StringUtils.removeSymbols(item.getCpfCnpj()));
 		var dbResponse = repo.findByCpfCnpj(item.getCpfCnpj());
 		if (dbResponse.isPresent()) {
 			var cliente = dbResponse.get();
